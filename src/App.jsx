@@ -1,5 +1,5 @@
 import './App.css';
-import Convert from './Pages/Convert.jsx'; // make sure the file is named Convert.jsx
+import Convert from './Pages/Convert.jsx'; 
 
 function App() {
   return (

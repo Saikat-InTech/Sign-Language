@@ -5,7 +5,6 @@ import xbotPic from '../Models/xbotPic.png';
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { one } from "../Animations/Number/one";
-import { A } from "../Animations/Number/A.jsx";
 import { defaultPose } from "../Animations/defaultpose.jsx";
 
 function Convert() {
@@ -20,11 +19,9 @@ function Convert() {
     ref.pending = false;
     ref.animations = [];
 
-    // Setup scene
     ref.scene = new THREE.Scene();
     ref.scene.background = new THREE.Color(0xeeeeee);
 
-    // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
@@ -34,7 +31,6 @@ function Convert() {
     spotLight.position.set(0, 5, 5);
     ref.scene.add(spotLight);
 
-    // Renderer & camera
     ref.renderer = new THREE.WebGLRenderer({ antialias: true });
     ref.camera = new THREE.PerspectiveCamera(
       30,
@@ -56,13 +52,11 @@ loader.load(
   xbot,
   (gltf) => {
     ref.avatar = gltf.scene;
-
-    // ✅ Clear old scene and lights
+// console.lof(ref.avatar)
     while (ref.scene.children.length > 0) {
       ref.scene.remove(ref.scene.children[0]);
     }
 
-    // ✅ Add lights again
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
@@ -70,12 +64,10 @@ loader.load(
     spotLight.position.set(0, 5, 5);
     ref.scene.add(ambientLight, directionalLight, spotLight);
 
-    // ✅ Scale & add avatar
-    ref.avatar.scale.set(0.6, 0.6, 0.6);
+    ref.avatar.scale.set(0.6, 0.6, 1);
     ref.avatar.rotation.y = 0;
     ref.scene.add(ref.avatar);
 
-    // ✅ Build bone map
     boneMapRef.current = {};
     ref.avatar.traverse((child) => {
       if (child.isSkinnedMesh || child.isMesh) {
@@ -86,7 +78,6 @@ loader.load(
       }
     });
 
-    // ✅ Apply default pose safely after first frame
     requestAnimationFrame(() => {
       defaultPose(ref);
       ref.renderer.render(ref.scene, ref.camera);
@@ -117,7 +108,7 @@ loader.load(
         }
 
         if (sign === "+" && bone[action][axis] < limit) {
-          bone[action][axis] += 0.05;
+          bone[action][axis] += 0.03;
           bone[action][axis] = Math.min(bone[action][axis], limit);
           i++;
         } else if (sign === "-" && bone[action][axis] > limit) {
@@ -164,11 +155,7 @@ loader.load(
     resetArms();
   defaultPose(ref);
 
-    if (value === "A") {
-      A(ref);
-      setText("Animating: A");
-      ref.animate();
-    } else if (value === "1") {
+    if (value === "1") {
       one(ref);
       setText("Animating: 1");
       ref.animate();
@@ -211,7 +198,7 @@ loader.load(
         <input
           ref={inputRef}
           type="text"
-          placeholder="Enter A or 1"
+          placeholder="Enter 1"
           className="input-style"
           style={{ width: "220px" }}
         />

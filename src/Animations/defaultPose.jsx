@@ -1,4 +1,3 @@
-// ✅ Updated defaultPose to set pose immediately without animation
 export const defaultPose = (ref) => {
   const pose = [
     ["mixamorigNeck", "rotation", "x", Math.PI / 12],
@@ -10,6 +9,7 @@ export const defaultPose = (ref) => {
 
   for (const [boneName, action, axis, value] of pose) {
     const bone = ref.avatar.getObjectByName(boneName);
+    // console.log(bone)
     if (bone) {
       bone[action][axis] = value;
     }
