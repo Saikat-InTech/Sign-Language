@@ -1,1 +1,1 @@
-# This is sign-language prohject
+# This is sign-language project
