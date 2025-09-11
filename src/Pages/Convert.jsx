@@ -4,7 +4,18 @@ import xbot from '../Models/xbot.glb';
 import xbotPic from '../Models/xbotPic.png';
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import InputBox from './InputBox';
 import { one } from "../Animations/Number/one";
+import { two } from "../Animations/Number/two";
+import { three } from "../Animations/Number/three";
+import { four } from "../Animations/Number/four";
+import { five } from "../Animations/Number/five";
+import { six } from "../Animations/Number/six";
+// import { seven } from "../Animations/Number/seven";
+// import { eight } from "../Animations/Number/eight";
+// import { nine } from "../Animations/Number/nine";
+// import { two, three, four, five, six, seven, eight, nine } from "../Animations/Number/numbers";
+
 import { defaultPose } from "../Animations/defaultpose.jsx";
 
 function Convert() {
@@ -13,6 +24,24 @@ function Convert() {
   const { current: ref } = componentRef;
   const inputRef = useRef();
   const boneMapRef = useRef({});
+
+  // 🔹 Step 1: Aliases for important bones
+  const boneAliases = {
+    hips: "mixamorigHips",
+    spine: "mixamorigSpine",
+    chest: "mixamorigSpine1",
+    head: "mixamorigHead",
+    leftArm: "mixamorigLeftArm",
+    rightArm: "mixamorigRightArm",
+    leftHand: "mixamorigLeftHand",
+    rightHand: "mixamorigRightHand",
+    rightIndex1: "mixamorigRightHandIndex1",
+    rightIndex2: "mixamorigRightHandIndex2",
+    rightIndex3: "mixamorigRightHandIndex3",
+    leftIndex1: "mixamorigLeftHandIndex1",
+    leftIndex2: "mixamorigLeftHandIndex2",
+    leftIndex3: "mixamorigLeftHandIndex3",
+  };
 
   useEffect(() => {
     ref.flag = false;
@@ -47,49 +76,63 @@ function Convert() {
     ref.camera.position.y = 1.6;
     ref.camera.lookAt(0, 1.2, 0);
 
-   const loader = new GLTFLoader();
-loader.load(
-  xbot,
-  (gltf) => {
-    ref.avatar = gltf.scene;
-// console.lof(ref.avatar)
-    while (ref.scene.children.length > 0) {
-      ref.scene.remove(ref.scene.children[0]);
-    }
+    const loader = new GLTFLoader();
+    loader.load(
+      xbot,
+      (gltf) => {
+        ref.avatar = gltf.scene;
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 5, 5);
-    const spotLight = new THREE.SpotLight(0xff9999, 5);
-    spotLight.position.set(0, 5, 5);
-    ref.scene.add(ambientLight, directionalLight, spotLight);
+        // 🔹 Step 2: Traverse & log all bones
+        ref.avatar.traverse((child) => {
+          if (child.isBone) {
+            console.log("🦴 Bone:", child.name);
+          }
+        });
 
-    ref.avatar.scale.set(0.6, 0.6, 1);
-    ref.avatar.rotation.y = 0;
-    ref.scene.add(ref.avatar);
+        while (ref.scene.children.length > 0) {
+          ref.scene.remove(ref.scene.children[0]);
+        }
 
-    boneMapRef.current = {};
-    ref.avatar.traverse((child) => {
-      if (child.isSkinnedMesh || child.isMesh) {
-        child.frustumCulled = false;
-      }
-      if (child.name?.includes("mixamorig")) {
-        boneMapRef.current[child.name] = child;
-      }
-    });
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 5, 5);
+        const spotLight = new THREE.SpotLight(0xff9999, 5);
+        spotLight.position.set(0, 5, 5);
+        ref.scene.add(ambientLight, directionalLight, spotLight);
 
-    requestAnimationFrame(() => {
-      defaultPose(ref);
-      ref.renderer.render(ref.scene, ref.camera);
-    });
-  },
-  undefined,
-  (error) => console.error("GLTF Load Error:", error)
-);
+        ref.avatar.scale.set(0.6, 0.6, 1);
+        ref.avatar.rotation.y = 0;
+        ref.scene.add(ref.avatar);
 
+        boneMapRef.current = {};
+        ref.avatar.traverse((child) => {
+          if (child.isSkinnedMesh || child.isMesh) {
+            child.frustumCulled = false;
+          }
+          if (child.name?.includes("mixamorig")) {
+            boneMapRef.current[child.name] = child;
+          }
+        });
 
+        requestAnimationFrame(() => {
+          defaultPose(ref);
+          ref.renderer.render(ref.scene, ref.camera);
+        });
+
+        // 🔹 Step 3: Example usage with aliases
+        const bones = boneMapRef.current;
+        const leftArm = bones[boneAliases.leftArm];
+        if (leftArm) {
+          leftArm.rotation.x = Math.PI / 8;
+          console.log("👉 Rotated Left Arm");
+        }
+      },
+      undefined,
+      (error) => console.error("GLTF Load Error:", error)
+    );
   }, []);
 
+  // 🔹 Your existing code unchanged from here
   ref.animate = () => {
     if (ref.animations.length === 0) {
       ref.pending = false;
@@ -147,74 +190,89 @@ loader.load(
     });
   };
 
-  const handleInput = () => {
-    const value = inputRef.current.value.toUpperCase();
-    if (!boneMapRef.current || Object.keys(boneMapRef.current).length === 0) return;
+const handleInput = (manualValue) => {
+  const value = (manualValue || "").toUpperCase();  // ✅ don't rely on inputRef anymore
+  if (!boneMapRef.current || Object.keys(boneMapRef.current).length === 0) return;
 
-    resetFingers();
-    resetArms();
+  resetFingers();
+  resetArms();
   defaultPose(ref);
 
-    if (value === "1") {
-      one(ref);
-      setText("Animating: 1");
-      ref.animate();
-    } else {
-      setText("No animation for this input.");
-    }
-  };
+  if (value === "1" || value === "ONE") {
+    one(ref);
+    setText("Animating: 1");
+    ref.animate();
+  } else if (value === "2" || value === "TWO") {
+    two(ref);
+    setText("Animating: 2");
+    ref.animate();
+  } else if (value === "3" || value === "THREE") {
+    three(ref);
+    setText("Animating: 3");
+    ref.animate();
+  } else if (value === "4" || value === "FOUR") {
+    four(ref);
+    setText("Animating: 4");
+    ref.animate();
+  } else if (value === "5" || value === "FIVE") {
+    five(ref);
+    setText("Animating: 5");
+    ref.animate();
+  } else if (value === "6" || value === "SIX") {
+    six(ref);
+    setText("Animating: 6");
+    ref.animate();
+  } else {
+    setText("No animation for this input.");
+  }
+};
 
- return (
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    height: '100vh',
-    overflow: 'hidden',
-    backgroundColor: '#f5f5f5'
-  }}>
-    <div id="canvas" />
 
+
+  return (
     <div style={{
-      textAlign: 'center',
-      marginTop: '10px',
-      padding: '10px',
-      backgroundColor: '#fff',
-      borderRadius: '12px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      height: '100vh',
+      overflow: 'hidden',
+      backgroundColor: '#f5f5f5'
     }}>
-      <img
-        src={xbotPic}
-        alt="Xbot Avatar"
-        style={{
-          width: "100px",
-          marginBottom: "10px",
-          borderRadius: "10px",
-          boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
-        }}
-      />
-      <div>
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Enter 1"
-          className="input-style"
-          style={{ width: "220px" }}
-        />
-        <button
-          onClick={handleInput}
-          className="btn btn-primary"
-          style={{ marginLeft: "10px", padding: "8px 16px" }}
-        >
-          Animate
-        </button>
-      </div>
-      <p style={{ marginTop: "10px", fontSize: "16px", color: "#333" }}>{text}</p>
-    </div>
-  </div>
-);
+      <div id="canvas" />
 
+      <div style={{
+        textAlign: 'center',
+        marginTop: '10px',
+        padding: '10px',
+        backgroundColor: '#fff',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+      }}>
+        <img
+          src={xbotPic}
+          alt="Xbot Avatar"
+          style={{
+            width: "100px",
+            marginBottom: "10px",
+            borderRadius: "10px",
+            boxShadow: '0 1px 4px rgba(0,0,0,0.2)'
+          }}
+        />
+        <div>
+  <InputBox
+  onSend={(value) => {
+    handleInput(value);  // pass the actual text
+  }}
+/>
+
+
+
+        </div>
+        <p style={{ marginTop: "10px", fontSize: "16px", color: "#333" }}>{text}</p>
+      </div>
+    </div>
+  );
 }
 
 export default Convert;
