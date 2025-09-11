@@ -151,11 +151,11 @@ function Convert() {
         }
 
         if (sign === "+" && bone[action][axis] < limit) {
-          bone[action][axis] += 0.03;
+          bone[action][axis] += 0.01;
           bone[action][axis] = Math.min(bone[action][axis], limit);
           i++;
         } else if (sign === "-" && bone[action][axis] > limit) {
-          bone[action][axis] -= 0.05;
+          bone[action][axis] -= 0.02;
           bone[action][axis] = Math.max(bone[action][axis], limit);
           i++;
         } else {
