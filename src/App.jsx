@@ -1,11 +1,27 @@
-import './App.css';
-import Convert from './Pages/Convert.jsx'; 
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./App.css";
+import Navbar from "./components/Navbar";
+import Home from "./Pages/Home";
+import About from "./Pages/About";
 
 function App() {
   return (
-    <>
-      <Convert />
-    </>
+    <BrowserRouter>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}>
+        <Navbar />
+        <main style={{ flex: 1 }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
 
