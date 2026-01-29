@@ -9,7 +9,7 @@ export const defaultPose = (ref) => {
 
   for (const [boneName, action, axis, value] of pose) {
     const bone = ref.avatar.getObjectByName(boneName);
-    // console.log(bone)
+    // console.log(bone);
     if (bone) {
       bone[action][axis] = value;
     }

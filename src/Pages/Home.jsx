@@ -23,7 +23,6 @@ function Home() {
   const boneMapRef = useRef({});
   const [messages, setMessages] = useState([
     { text: "Hello, how are you?", type: "message" },
-    { text: "I am learning sign language.", type: "message" },
   ]);
 
   // 🧩 Initialize Scene
