@@ -6,6 +6,10 @@ import xbot from "../Models/xbot.glb";
 import { defaultPose } from "../Animations/defaultpose.jsx";
 import { one } from "../Animations/Number/one";
 import { two } from "../Animations/Number/two";
+import { seven } from "../Animations/Number/seven.js";
+import { eight } from "../Animations/Number/eight.js";
+import { nine } from "../Animations/Number/nine.js";
+import { ten } from "../Animations/Number/ten.js";
 import { three } from "../Animations/Number/three";
 import { four } from "../Animations/Number/four";
 import { five } from "../Animations/Number/five";
@@ -177,7 +181,7 @@ function Home() {
     setText("");
     setIsPlaying(true);
 
-    const numberMap = { 1: one, 2: two, 3: three, 4: four, 5: five, 6: six };
+    const numberMap = { 1: one, 2: two, 3: three, 4: four, 5: five, 6: six, 7: seven, 8 : eight, 9 : nine, 10 : ten };
 
     if (numberMap[input]) {
       numberMap[input](ref);
@@ -280,6 +284,10 @@ function Home() {
       FOUR: four,
       FIVE: five,
       SIX: six,
+      SEVEN: seven,
+      EIGHT: eight,
+      NINE: nine,
+      TEN: ten,
     };
     if (num[last]) num[last](ref);
     ref.animate();
