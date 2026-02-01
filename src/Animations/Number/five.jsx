@@ -16,7 +16,7 @@ export const five = (ref) => {
 
     animations = [];
 
-    // Reset fingers
+    
     animations.push(["mixamorigRightHandIndex1", "rotation", "z", 0, "-"]);
     animations.push(["mixamorigRightHandMiddle1", "rotation", "z", 0, "-"]);
     animations.push(["mixamorigRightHandRing1", "rotation", "z", 0, "-"]);
