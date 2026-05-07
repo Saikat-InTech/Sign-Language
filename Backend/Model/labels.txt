@@ -1,0 +1,15 @@
+0 one
+1 two
+2 three
+3 four
+4 five
+5 six
+6 seven
+7 eight
+8 Nine
+9 a
+10 B
+11 C
+12 d
+13 Time
+14 Hello

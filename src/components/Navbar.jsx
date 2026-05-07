@@ -13,16 +13,16 @@ function Navbar() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-      }}>
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <img
           src={logo}
           alt="Sign Language App"
           style={{
-            width: "130px", // increase only the logo size
-            height: "130px",
-            objectFit: "contain", // keeps image proportion correct
-            display: "block", // removes inline spacing issues
+            width: "60px",   // 🔧 FIXED (was too big)
+            height: "60px",
+            objectFit: "contain",
           }}
         />
 
@@ -31,7 +31,7 @@ function Navbar() {
         </span>
       </div>
 
-      <div style={{ display: "flex", gap: "2rem", padding: "50px" }}>
+      <div style={{ display: "flex", gap: "2rem", paddingRight: "20px" }}>
         <NavLink
           to="/"
           end
@@ -42,12 +42,14 @@ function Navbar() {
               ? "2px solid #0085FF"
               : "2px solid transparent",
             padding: "4px 0",
-          })}>
+          })}
+        >
           Home
         </NavLink>
 
+        {/* ✅ FIXED ROUTE */}
         <NavLink
-          to="/live-translation"
+          to="/live"
           style={({ isActive }) => ({
             color: isActive ? "#0085FF" : "#666",
             textDecoration: "none",
@@ -55,7 +57,8 @@ function Navbar() {
               ? "2px solid #0085FF"
               : "2px solid transparent",
             padding: "4px 0",
-          })}>
+          })}
+        >
           Live Translation
         </NavLink>
 
@@ -68,7 +71,8 @@ function Navbar() {
               ? "2px solid #0085FF"
               : "2px solid transparent",
             padding: "4px 0",
-          })}>
+          })}
+        >
           About
         </NavLink>
       </div>
