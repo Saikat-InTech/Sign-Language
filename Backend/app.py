@@ -1,191 +1,171 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-from cvzone.ClassificationModule import Classifier
-import cv2
-import numpy as np
-from PIL import Image
+
 import io
-import math
+from pathlib import Path
+from threading import Lock
+
+import numpy as np
+import tensorflow as tf
+from PIL import Image, ImageOps
 
 app = Flask(__name__)
 CORS(app)
 
-# -----------------------------
-# LOAD MODEL
-# -----------------------------
-classifier = Classifier(
-    "Model/keras_model.h5",
-    "Model/labels.txt"
+BASE_DIR = Path(__file__).resolve().parent
+predict_lock = Lock()
+
+
+def resolve_existing_path(*candidates):
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    raise FileNotFoundError(
+        "Could not find required file. Tried: "
+        + ", ".join(str(candidate) for candidate in candidates)
+    )
+
+
+MODEL_PATH = resolve_existing_path(
+    # BASE_DIR / "keras_model.h5",
+    BASE_DIR / "Model" / "keras_model.h5",
+)
+LABELS_PATH = resolve_existing_path(
+    # BASE_DIR / "labels.txt",
+    BASE_DIR / "Model" / "labels.txt",
 )
 
-# -----------------------------
-# LABELS
-# -----------------------------
-labels = [
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "Nine",
-    "a",
-    "B",
-    "C",
-    "d",
-    "Time",
-    "Hello"
-]
 
-print("✅ Model Loaded")
-print("✅ Labels Loaded")
+def build_teachable_machine_model():
+    feature_extractor = tf.keras.Sequential(
+        [
+            tf.keras.layers.Input(shape=(224, 224, 3), name="model1_input"),
+            tf.keras.applications.MobileNetV2(
+                input_shape=(224, 224, 3),
+                alpha=0.35,
+                include_top=False,
+                weights=None,
+                pooling=None,
+            ),
+            tf.keras.layers.GlobalAveragePooling2D(
+                name="global_average_pooling2d_GlobalAveragePooling2D1"
+            ),
+        ],
+        name="sequential_1",
+    )
 
-# -----------------------------
-# SETTINGS
-# -----------------------------
-imgSize = 300
-offset = 20
+    classifier = tf.keras.Sequential(
+        [
+            tf.keras.layers.Input(shape=(1280,), name="dense_Dense1_input"),
+            tf.keras.layers.Dense(100, activation="relu", name="dense_Dense1"),
+            tf.keras.layers.Dense(
+                15,
+                activation="softmax",
+                use_bias=False,
+                name="dense_Dense2",
+            ),
+        ],
+        name="sequential_3",
+    )
 
-# -----------------------------
-# PREDICT API
-# -----------------------------
+    model = tf.keras.Sequential(
+        [
+            tf.keras.layers.Input(shape=(224, 224, 3), name="sequential_1_input"),
+            feature_extractor,
+            classifier,
+        ]
+    )
+    model.load_weights(MODEL_PATH)
+    return model
+
+
+def load_labels():
+    with LABELS_PATH.open("r", encoding="utf-8") as file:
+        return [line.split(" ", 1)[1].strip() for line in file.readlines() if line.strip()]
+
+
+model = build_teachable_machine_model()
+labels = load_labels()
+MODEL_INPUT_HEIGHT = int(model.input_shape[1])
+MODEL_INPUT_WIDTH = int(model.input_shape[2])
+
+if len(labels) != model.output_shape[-1]:
+    raise ValueError(
+        f"Label count ({len(labels)}) does not match model output classes ({model.output_shape[-1]})."
+    )
+
+
+def preprocess(image):
+    fitted_image = ImageOps.fit(
+        image.convert("RGB"),
+        (MODEL_INPUT_WIDTH, MODEL_INPUT_HEIGHT),
+        Image.Resampling.LANCZOS,
+    )
+    image_array = np.asarray(fitted_image).astype("float32")
+    normalized_image = (image_array / 127.5) - 1.0
+    return np.expand_dims(normalized_image, axis=0)
+
+
+def predict_scores(image):
+    processed = preprocess(image)
+    with predict_lock:
+        return model.predict(processed, verbose=0)
+
+
+def build_top_predictions(prediction, limit=3):
+    scores = prediction[0]
+    top_indices = np.argsort(scores)[::-1][:limit]
+
+    return [
+        {
+            "label": labels[int(index)],
+            "confidence": round(float(scores[index]) * 100, 2),
+        }
+        for index in top_indices
+    ]
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify(
+        {
+            "status": "ok",
+            "model_input_size": [MODEL_INPUT_WIDTH, MODEL_INPUT_HEIGHT],
+            "label_count": len(labels),
+        }
+    )
+
+
 @app.route("/predict", methods=["POST"])
 def predict():
-
     try:
-
-        # Check image
         if "image" not in request.files:
-
-            return jsonify({
-                "error": "No image uploaded"
-            })
+            return jsonify({"error": "No image uploaded"}), 400
 
         file = request.files["image"]
+        image = Image.open(io.BytesIO(file.read()))
 
-        # Read image bytes
-        image_bytes = file.read()
+        prediction = predict_scores(image)
+        top_predictions = build_top_predictions(prediction)
 
-        # Convert bytes to numpy array
-        npimg = np.frombuffer(
-            image_bytes,
-            np.uint8
+        index = int(np.argmax(prediction))
+        confidence = round(float(prediction[0][index]) * 100, 2)
+        result = labels[index]
+
+        return jsonify(
+            {
+                "result": result,
+                "prediction": result,
+                "confidence": confidence,
+                "top_predictions": top_predictions,
+                "model_input_size": [MODEL_INPUT_WIDTH, MODEL_INPUT_HEIGHT],
+            }
         )
 
-        # Decode image
-        img = cv2.imdecode(
-            npimg,
-            cv2.IMREAD_COLOR
-        )
+    except Exception as error:
+        return jsonify({"error": str(error)}), 500
 
-        if img is None:
 
-            return jsonify({
-                "error": "Invalid image"
-            })
-
-        # -----------------------------------
-        # CREATE WHITE BACKGROUND
-        # -----------------------------------
-        imgWhite = np.ones(
-            (imgSize, imgSize, 3),
-            np.uint8
-        ) * 255
-
-        h, w, _ = img.shape
-
-        aspectRatio = h / w
-
-        # -----------------------------------
-        # RESIZE LIKE TRAINING
-        # -----------------------------------
-        if aspectRatio > 1:
-
-            k = imgSize / h
-
-            wCal = math.ceil(k * w)
-
-            imgResize = cv2.resize(
-                img,
-                (wCal, imgSize)
-            )
-
-            wGap = math.ceil(
-                (imgSize - wCal) / 2
-            )
-
-            imgWhite[
-                :,
-                wGap:wCal + wGap
-            ] = imgResize
-
-        else:
-
-            k = imgSize / w
-
-            hCal = math.ceil(k * h)
-
-            imgResize = cv2.resize(
-                img,
-                (imgSize, hCal)
-            )
-
-            hGap = math.ceil(
-                (imgSize - hCal) / 2
-            )
-
-            imgWhite[
-                hGap:hCal + hGap,
-                :
-            ] = imgResize
-
-        # -----------------------------------
-        # PREDICTION
-        # -----------------------------------
-        prediction, index = classifier.getPrediction(
-            imgWhite,
-            draw=False
-        )
-
-        confidence = float(
-            max(prediction)
-        )
-
-        predicted_label = labels[index]
-
-        print("Prediction:", predicted_label)
-        print("Confidence:", confidence)
-
-        # -----------------------------------
-        # RESPONSE
-        # -----------------------------------
-        return jsonify({
-
-            "prediction": predicted_label,
-
-            "confidence": round(
-                confidence * 100,
-                2
-            )
-        })
-
-    except Exception as e:
-
-        print("ERROR:", str(e))
-
-        return jsonify({
-            "error": str(e)
-        })
-
-# -----------------------------
-# RUN SERVER
-# -----------------------------
 if __name__ == "__main__":
-
-    app.run(
-        debug=True,
-        host="0.0.0.0",
-        port=5000
-    )
+    app.run(host="0.0.0.0", port=5000, debug=True)
