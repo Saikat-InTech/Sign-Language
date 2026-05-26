@@ -1,15 +1,15 @@
-export const three = (ref) => {
+export const nine = (ref) => {
     let animations = [];
 
-    // Fold pinky
-    animations.push(["mixamorigRightHandPinky1", "rotation", "z", Math.PI / 2, "+"]);
+    // Fold middle
+    animations.push(["mixamorigRightHandMiddle1", "rotation", "z", Math.PI / 2, "+"]);
 
-    // Keep index, middle, and ring straight
+    // Keep index, ring, and pinky straight
     animations.push(["mixamorigRightHandIndex1", "rotation", "z", 0, "+"]);
-    animations.push(["mixamorigRightHandMiddle1", "rotation", "z", 0, "+"]);
     animations.push(["mixamorigRightHandRing1", "rotation", "z", 0, "+"]);
+    animations.push(["mixamorigRightHandPinky1", "rotation", "z", 0, "+"]);
 
-    // Slight wrist / arm adjustment
+    // Wrist / arm adjustment
     animations.push(["mixamorigRightHand", "rotation", "z", -Math.PI / 18, "-"]);
     animations.push(["mixamorigRightForeArm", "rotation", "z", Math.PI / 14, "+"]);
     animations.push(["mixamorigRightArm", "rotation", "x", -Math.PI / 14, "-"]);

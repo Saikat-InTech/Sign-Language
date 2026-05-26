@@ -1,25 +1,30 @@
 export const one = (ref) => {
     let animations = [];
 
-    animations.push(["mixamorigRightHandIndex1", "rotation", "z", Math.PI / 8, "+"]);
-
+    // Fold middle, ring, and pinky
     animations.push(["mixamorigRightHandMiddle1", "rotation", "z", Math.PI / 2, "+"]);
     animations.push(["mixamorigRightHandRing1", "rotation", "z", Math.PI / 2, "+"]);
     animations.push(["mixamorigRightHandPinky1", "rotation", "z", Math.PI / 2, "+"]);
 
-    animations.push(["mixamorigRightHand", "rotation", "z", -Math.PI / 15, "-"]);
-    animations.push(["mixamorigRightForeArm", "rotation", "z", Math.PI / 10, "+"]);
-    animations.push(["mixamorigRightArm", "rotation", "x", -Math.PI / 10, "-"]);
+    // Keep index straight
+    animations.push(["mixamorigRightHandIndex1", "rotation", "z", 0, "+"]);
+
+    // Slight wrist / arm adjustment
+    animations.push(["mixamorigRightHand", "rotation", "z", -Math.PI / 18, "-"]);
+    animations.push(["mixamorigRightForeArm", "rotation", "z", Math.PI / 14, "+"]);
+    animations.push(["mixamorigRightArm", "rotation", "x", -Math.PI / 14, "-"]);
 
     ref.animations.push(animations);
 
     animations = [];
 
+    // Reset fingers
     animations.push(["mixamorigRightHandIndex1", "rotation", "z", 0, "-"]);
     animations.push(["mixamorigRightHandMiddle1", "rotation", "z", 0, "-"]);
     animations.push(["mixamorigRightHandRing1", "rotation", "z", 0, "-"]);
     animations.push(["mixamorigRightHandPinky1", "rotation", "z", 0, "-"]);
 
+    // Reset arm
     animations.push(["mixamorigRightHand", "rotation", "z", 0, "+"]);
     animations.push(["mixamorigRightForeArm", "rotation", "z", 0, "-"]);
     animations.push(["mixamorigRightArm", "rotation", "x", 0, "+"]);
